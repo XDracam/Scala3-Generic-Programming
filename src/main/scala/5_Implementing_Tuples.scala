@@ -1,7 +1,7 @@
-import Implementing_Tuples.{*:, EmptyTup, Map, Tup}
 
 
-/*************************************
+
+    /*************************************
     *   Generic Programming in Scala 3   *
     *        - Cameron Reuschel -        *
     *************************************/
@@ -20,6 +20,7 @@ object Implementing_Tuples:
 
 
 
+
 // Some Scala tricks for ease of use
 
   val *: = ConsTup                     // for unapply
@@ -32,10 +33,12 @@ object Implementing_Tuples:
 
 
 
+
 // Let's try this out
 
   val t = 1 *: 2 *: EmptyTup
   val one *: two *: EmptyTup = t
+
 
 
 
@@ -59,6 +62,94 @@ object Implementing_Tuples:
 
 
 
+
+// We can even type-safely index tuples
+
+  // Every literal has a type, e.g.
+  val constOne: 1 = 1
+  val constStr: "foo" = "foo"
+
+  // These types inherit from their literal's type and from Singleton
+  val constOne2: Int & Singleton = constOne
+  val constStr2: String & Singleton = constStr
+
+
+
+
+
+
+// The scala 3 compiler has builtin type operations on literal types
+
+  import compiletime.ops.int._
+
+  type Length[T <: Tup] <: Int = T match
+    case EmptyTup => 0
+    case h *: t => 1 + Length[t]
+
+  // Literal types can be converted to values during compiletime in inline methods
+  extension [T <: Tup](v: T) inline def length = compiletime.constValue[Length[T]]
+
+
+
+
+
+
+// With arithmetic, we can do indexing
+
+// But first, we use a trick to get in-bounds checking
+
+  import compiletime.ops.boolean._
+
+  @annotation.implicitNotFound("Requirement failed: expected ${T} to be true")
+  transparent trait Require[T]
+
+  inline given Require[true] with {}
+
+
+
+      
+
+
+// Now to compiletime-safe bound-checked indexing
+
+  type ElemAt[T <: Tup, I <: Int] = (I, T) match
+    case (0, h *: t) => h
+    case (n, h *: t) => ElemAt[t, n-1]
+
+  extension [T <: Tup](v: T)
+    inline def get[I <: Int & Singleton](i: I)(
+      using isPositive: Require[I >= 0],
+            isInBounds: Require[I < Length[T]]
+    ): ElemAt[T, I] = inline v match
+      case v @ (_ *: _) => __getRec(v, i).asInstanceOf[ElemAt[T, I]]
+
+  private inline def __getRec[T <: _ *: _, I <: Int](v: T, i: I): ElemAt[T, I] = (
+    inline if i == 0 then v.head
+    else inline v.tail match
+      case tail @ (_ *: _) => __getRec(tail, i-1)
+  ).asInstanceOf[ElemAt[T, I]]
+
+
+
+
+
+// Let's try it out
+
+  @main def testTypesafeGet =
+    val tup = 1 *: "two" *: '3' *: EmptyTup
+    val one: Int = tup.get(0)
+    val two: String = tup.get(1)
+    val three: Char = tup.get(2)
+    println(s"$one - $two - $three")
+
+    // will not compile
+//    val negative = tup.get(-1)
+//    val outOfBounds = tup.get(3)
+
+
+
+
+
 // Time for something more complex: mapping
 
   type Map[T <: Tup, F[_]] <: Tup = T match
@@ -77,6 +168,7 @@ object Implementing_Tuples:
 
 
 
+
 // [T] => (x: T) => Option(x) is a POLYMORPHIC lambda
 
 // if you can have
@@ -84,6 +176,7 @@ object Implementing_Tuples:
 // then why not
   val bar = [T] => (v: T) => Option(v)
 // ?
+
 
 
 
@@ -115,6 +208,7 @@ object Implementing_Tuples:
 
 
 
+
 // Good and well, but we cannot even reverse a tuple with this...
 
   type Fold[T <: Tup, Seed, F[_,_]] = T match
@@ -130,6 +224,11 @@ object Implementing_Tuples:
         case h *: t => t.fold(fn(h, seed))(fn)
       ).asInstanceOf[Fold[T, Seed, F]]
 
+
+
+
+
+
 // With this, we could implement reversal, but...
 
 //  extension [T <: Tup](v: T) def reversed =
@@ -144,6 +243,7 @@ object Implementing_Tuples:
 
 // ... it crashes the compiler with an internal assertion error :c
 // https://github.com/lampepfl/dotty/issues/13075
+
 
 
 
