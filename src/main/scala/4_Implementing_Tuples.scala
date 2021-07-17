@@ -107,7 +107,7 @@ object Implementing_Tuples:
 
 
 
-      
+
 
 
 // Now to compiletime-safe bound-checked indexing
@@ -133,6 +133,8 @@ object Implementing_Tuples:
 
 
 
+
+
 // Let's try it out
 
   @main def testTypesafeGet =
@@ -150,6 +152,10 @@ object Implementing_Tuples:
 
 
 
+
+
+
+
 // Time for something more complex: mapping
 
   type Map[T <: Tup, F[_]] <: Tup = T match
@@ -161,6 +167,11 @@ object Implementing_Tuples:
       case EmptyTup => EmptyTup
       case h *: t => fn(h) *: t.map(fn)
     ).asInstanceOf[Map[T, F]] // cast necessary, sadly
+
+
+
+
+
 
   val toOption: Option[Int] *: Option[String] *: EmptyTup =
     (1337 *: "leet" *: EmptyTup).map([T] => (x: T) => Option(x))
@@ -181,6 +192,8 @@ object Implementing_Tuples:
 
 
 
+
+
 // There are also anonymous type lambdas:
 
   type Explicit[T] = Option[T]
@@ -194,16 +207,23 @@ object Implementing_Tuples:
 
 
 
+
+
+
 // What about folding?
 
-  extension [T <: Tup](v: T) def foldSimple[R](seed: R)(fn: [A] => (A, R) => R): R =
-    v match
-      case EmptyTup => seed
-      case h *: t => t.foldSimple(fn(h, seed))(fn)
+  extension [T <: Tup](v: T)
+    def foldSimple[R](seed: R)(fn: [A] => (A, R) => R): R =
+      v match
+        case EmptyTup => seed
+        case h *: t => t.foldSimple(fn(h, seed))(fn)
 
   @main def testSimpleFolding =
     val tup = (1337 *: "leet" *: List(1,2,3) *: EmptyTup)
     println(tup.foldSimple("")([A] => (curr: A, acc: String) => s"$acc\n$curr"))
+
+
+
 
 
 
@@ -243,6 +263,11 @@ object Implementing_Tuples:
 
 // ... it crashes the compiler with an internal assertion error :c
 // https://github.com/lampepfl/dotty/issues/13075
+      
+// .. which odersky himself fixed ...
+// https://github.com/dotty-staging/dotty/commit/75b6143fff5a761fffe05003596dbb7a7306c1b1
+      
+// .. and this code is now a test case in dotty
 
 
 
@@ -257,9 +282,4 @@ object Implementing_Tuples:
 
 
 end Implementing_Tuples
-
-
-    /***************************
-    *   Thanks for watching!   *
-    ***************************/
 

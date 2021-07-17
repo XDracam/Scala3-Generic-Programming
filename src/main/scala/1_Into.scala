@@ -8,6 +8,16 @@
 
 
 
+/*
+ *    Generic Programming:
+ *
+ *          A style of computer programming in which algorithms are written
+ *          in terms of types to-be-specified-later that are then instantiated
+ *          when needed for specific types provided as parameters.
+ *
+ *      - https://en.wikipedia.org/wiki/Generic_programming
+ */
+
 object Intro:
 
 // Consider following types:
@@ -25,7 +35,6 @@ object Intro:
   /** Type class for all T that can be converted to JSON */
   trait ToJson[T]:
     extension (obj: T) def toJson: String
-      
 
 
 
@@ -39,6 +48,7 @@ object Intro:
 
   given list2json[T](using item2j: ToJson[T]): ToJson[List[T]] with
     extension (obj: List[T]) def toJson = obj.map(_.toJson).mkString("[", ", ", "]")
+
 
 
 
@@ -79,22 +89,32 @@ object Intro:
       val coursesJson = courses.toJson
       s"""{"name":$nameJson,"id":$idJson,"gender":$genderJson,"courses":$coursesJson}"""
 
-    // => we need to implement someting like this for *every* case class :c
-
-
 
 
 // Let's see whether this works
 
   @main def serializeMe =
-    val me = Student(Name("Cameron", "Reuschel"), id = 2084009, Gender.Male, courses = List("FP_Seminar"))
+    val me = Student(
+      Name("Cameron", "Reuschel"),
+      id = 1234567,
+      Gender.Male,
+      courses = List("FP_Seminar"))
     println(me.toJson)
 
 
 
-      
+
+
+
+
+
+
 // > We don't want to write so much boilerplate for all supported types
-//
-// > But we also want type safety using composition and no reflection overhead...
+
+// > But we also want:
+//   - type safety
+//   - composition
+//   - no reflection overhead
+//     ...
 
 end Intro

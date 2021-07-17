@@ -10,13 +10,33 @@
 
 object Typeclass_Derivation:
 
-// We can use the `inline` keyword to
-// let the compiler derive typeclass instances
+// We still have to explicitly define a `ToJson` for each case class
+//     and we also lose the field names, and don't use {} notation either...
+
+
+
+// Can we do better?
+
+
+
+
+      // => Turns out we can! 🎉
+      //      with typeclass derivation
+
+
+
+
+
+
+
+
+
+
+// Back to our original problem:
 
   /** Type class for all T that can be converted to JSON */
   trait ToJson[T]:
     extension (obj: T) def toJson: String
-
 
 
 // Basic ToJson givens exactly as before...
@@ -30,11 +50,34 @@ object Typeclass_Derivation:
   given list2json[T](using item2j: ToJson[T]): ToJson[List[T]] with
     extension (obj: List[T]) def toJson = obj.map(_.toJson).mkString("[", ", ", "]")
 
-  
-  
 
-// `deriving` keyword works by calling `derived` on the object it derives
-// The returned value will be given in the same scope
+
+
+
+
+
+
+
+
+// We can use the `inline` keyword to
+//   let the compiler derive typeclass instances!
+
+
+
+  enum Gender { case Male; case Female; case Diverse }
+  case class Name(firstName: String, lastName: String) derives ToJson
+  case class Student(name: Name, id: Int, gender: Gender, courses: List[String]) derives ToJson
+
+
+
+
+
+
+
+
+
+// `deriving` keyword works by calling `def derived` on the object it derives.
+// The returned value will be `given` in the same scope.
 
   object ToJson:
 
@@ -51,11 +94,12 @@ object Typeclass_Derivation:
                 .productIterator.map(_.asInstanceOf[String]).toList
             )}}"
 
-
-
           type Wrapped[F[_], T <: Tuple] <: Tuple = T match
             case EmptyTuple => EmptyTuple
             case h *: t => F[h] *: Wrapped[F, t]
+
+
+
 
           type THead[T <: Tuple] = T match
             case a *: b => a
@@ -89,27 +133,39 @@ object Typeclass_Derivation:
   end ToJson
 
 
-// Back to our original problem:
 
-  case class Student(name: Name, id: Int, gender: Gender, courses: List[String]) derives ToJson
-  case class Name(firstName: String, lastName: String) derives ToJson
-  enum Gender { case Male; case Female; case Diverse }
-      
-  
+
+
 // => Time to test out our derivation!
-      
+
   // We do not implement derivation for coproduct types for now
   given gender2json: ToJson[Gender] with
     extension (obj: Gender) def toJson = s"\"${obj.toString}\""
 
 
   @main def serializeMe3 =
-    val me = Student(Name("Cameron", "Reuschel"), id = 2084009, Gender.Male, courses = List("FP_Seminar"))
+    val me = Student(
+      Name("Cameron", "Reuschel"),
+      id = 1234567,
+      Gender.Male,
+      courses = List("FP_Seminar")
+    )
     println(me.toJson)
-      
-    
 
-// => we can serialize any case class to json now!
+
+
+
+
+
+// => now we can serialize any case class to json!
+
 //    (deserialization and coproduct types for another day...)
 
 end Typeclass_Derivation
+
+
+
+    /***************************
+     *   Thanks for watching!   *
+     ***************************/
+
