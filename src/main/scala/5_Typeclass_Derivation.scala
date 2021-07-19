@@ -76,7 +76,7 @@ object Typeclass_Derivation:
 
 
 
-// `deriving` keyword works by calling `def derived` on the object it derives.
+// `derives` keyword works by calling `def derived` on the object it derives.
 // The returned value will be `given` in the same scope.
 
   object ToJson:

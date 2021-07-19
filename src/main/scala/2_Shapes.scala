@@ -100,7 +100,7 @@ object Shapes:
  *            by the >fixed order< of the operands in the product.
  *          [...] The expression of an instance of a product type will be a >tuple< [...]
  *
- *      - https://en.wikipedia.org/wiki/Generic_programming
+ *      - https://en.wikipedia.org/wiki/Product_type
  */
       
       
@@ -118,7 +118,6 @@ object Shapes:
       
   val foo1: Product = Foo1(1, "2")
 
-  case class Foo2(a: Int, b: String) extends Product2[Int, String]
   
   
   
@@ -130,6 +129,8 @@ object Shapes:
       
 // case classes automatically provide all values needed
 //   to implement the appropriate ProductN trait
+
+  case class Foo2(a: Int, b: String) extends Product2[Int, String]
 
   var foo2: Product2[Int, String] = Foo2(1337, "leet")
       

@@ -14,7 +14,7 @@ object Implementing_Tuples:
 //   (https://github.com/lampepfl/dotty/blob/master/library/src/scala/Tuple.scala)
 
   sealed trait Tup
-  case class ConsTup[T, H <: Tup](head: T, tail: H) extends Tup
+  case class ConsTup[H, T <: Tup](head: H, tail: T) extends Tup
   case object EmptyTup extends Tup
 
 
@@ -101,7 +101,7 @@ object Implementing_Tuples:
   import compiletime.ops.boolean._
 
   @annotation.implicitNotFound("Requirement failed: expected ${T} to be true")
-  transparent trait Require[T]
+  trait Require[T <: Boolean]
 
   inline given Require[true] with {}
 

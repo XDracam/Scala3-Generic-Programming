@@ -68,7 +68,7 @@ object Intro:
   given (using str2j: ToJson[String]): ToJson[Name] with
     extension (obj: Name) def toJson =
       val Name(first, last) = obj
-      s"""{"firstName":${first.toJson},"lastName":${last.toJson}"""
+      s"""{"firstName":${first.toJson},"lastName":${last.toJson}}"""
 
 
 
